@@ -3,14 +3,12 @@ package com.mauriziocarini.quaterna
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Color
+import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.ScrollView
-import android.widget.TextView
+import android.widget.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -21,15 +19,15 @@ class MainActivity : Activity() {
     private val clrSfondo = Color.parseColor("#0A0A12")
     private val clrPannello = Color.parseColor("#161622")
     private val clrOro = Color.parseColor("#D4AF5A")
-    private val clrAzzurro = Color.parseColor("#5AA0DC")
-    private val clrVerde = Color.parseColor("#50D282")
-    private val clrRosso = Color.parseColor("#D25050")
+    private val clrAzzurro = Color.parseColor("#38BDF8")
+    private val clrVerde = Color.parseColor("#00E676")
+    private val clrRosso = Color.parseColor("#E57373")
     private val clrTesto = Color.parseColor("#E4E4EE")
+    private val clrGrigioScuro = Color.parseColor("#2A2A42")
 
-    private lateinit var tvStato: TextView
-    private lateinit var tvQuaterna: TextView
-    private lateinit var tvInfo: TextView
-    private lateinit var tvEsiti: TextView
+    private lateinit var tvStatusTop: TextView
+    private lateinit var llStorico: LinearLayout
+    private lateinit var btnAggiorna: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,77 +37,57 @@ class MainActivity : Activity() {
         
         val layout = LinearLayout(this)
         layout.orientation = LinearLayout.VERTICAL
-        layout.setPadding(40, 60, 40, 40)
+        layout.setPadding(30, 40, 30, 40)
         scroll.addView(layout)
 
-        // TITOLO
-        val tvTitolo = TextView(this)
-        tvTitolo.text = "🎯 QUATERNA ULTRA"
-        tvTitolo.textSize = 28f
-        tvTitolo.setTextColor(clrOro)
-        tvTitolo.gravity = Gravity.CENTER
-        layout.addView(tvTitolo)
-
-        // PULSANTE AGGIORNA
-        val btnAggiorna = Button(this)
-        btnAggiorna.text = "⬇ Aggiorna Internet"
-        btnAggiorna.textSize = 16f
-        btnAggiorna.setTextColor(Color.WHITE)
-        btnAggiorna.setBackgroundColor(Color.parseColor("#2A2A42"))
-        val paramsBtn = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 120)
-        paramsBtn.setMargins(0, 30, 0, 30)
-        btnAggiorna.layoutParams = paramsBtn
-        layout.addView(btnAggiorna)
-
-        // PANNELLO PREVISIONE
-        val pannelloQuaterna = LinearLayout(this)
-        pannelloQuaterna.orientation = LinearLayout.VERTICAL
-        pannelloQuaterna.setPadding(30, 30, 30, 30)
-        val shape = GradientDrawable().apply {
-            setColor(clrPannello); cornerRadius = 20f; setStroke(2, Color.parseColor("#333344"))
+        // 1. BARRA DI STATO (In alto)
+        tvStatusTop = TextView(this).apply {
+            text = "In attesa di aggiornamento..."
+            textSize = 12f
+            setTextColor(clrOro)
+            setPadding(0, 0, 0, 20)
         }
-        pannelloQuaterna.background = shape
-        layout.addView(pannelloQuaterna)
+        layout.addView(tvStatusTop)
 
-        tvStato = TextView(this).apply {
-            text = "Verifica archivio in corso..."
-            textSize = 14f; setTextColor(clrAzzurro)
+        // 2. GRIGLIA PULSANTI (Riga 1)
+        val row1 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        btnAggiorna = creaPulsante("⬇ Aggiorna", clrAzzurro)
+        val btnManuale = creaPulsante("✏ Manuale", clrVerde)
+        val btnPrev = creaPulsante("🎯 Previsione", clrVerde)
+        row1.addView(btnAggiorna); row1.addView(btnManuale); row1.addView(btnPrev)
+        layout.addView(row1)
+
+        // 3. GRIGLIA PULSANTI (Riga 2)
+        val row2 = LinearLayout(this).apply { 
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 10, 0, 30)
         }
-        pannelloQuaterna.addView(tvStato)
+        val btnArchivio = creaPulsante("📋 Archivio", clrOro)
+        val btnReport = creaPulsante("📄 Report", clrAzzurro)
+        row2.addView(btnArchivio); row2.addView(btnReport)
+        layout.addView(row2)
 
-        tvQuaterna = TextView(this).apply {
-            text = "-- - -- - -- - --"
-            textSize = 32f; setTextColor(clrOro); gravity = Gravity.CENTER
-            val p = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            p.setMargins(0, 30, 0, 30); layoutParams = p
+        // 4. TITOLO SEZIONE
+        val tvTitoloStorico = TextView(this).apply {
+            text = "📊 Storico esiti (da Ottobre 2025)"
+            textSize = 18f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(clrTesto)
+            setPadding(0, 0, 0, 20)
         }
-        pannelloQuaterna.addView(tvQuaterna)
-        
-        tvInfo = TextView(this).apply {
-            text = ""; textSize = 14f; setTextColor(clrTesto); gravity = Gravity.CENTER
+        layout.addView(tvTitoloStorico)
+
+        // 5. CONTENITORE PER LE CARD DEGLI ESITI
+        llStorico = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
         }
-        pannelloQuaterna.addView(tvInfo)
+        layout.addView(llStorico)
 
-        // ESITI IN DETTAGLIO
-        tvEsiti = TextView(this).apply {
-            text = ""; textSize = 15f; setTextColor(Color.WHITE)
-            val p = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            p.setMargins(0, 30, 0, 30); layoutParams = p
-        }
-        layout.addView(tvEsiti)
-
-        // PULSANTE REPORT
-        val btnReport = Button(this)
-        btnReport.text = "📄 Genera Report Dettagliato"
-        btnReport.setTextColor(Color.WHITE)
-        btnReport.setBackgroundColor(clrAzzurro)
-        layout.addView(btnReport)
-
-        // LOGICA INIZIALE
+        // --- LOGICA ---
         caricaDatiLocali()
 
         btnAggiorna.setOnClickListener {
-            btnAggiorna.text = "Download in corso..."
+            btnAggiorna.text = "Download..."
             btnAggiorna.isEnabled = false
             CoroutineScope(Dispatchers.Main).launch {
                 val dati = NetworkClient.scaricaStorico()
@@ -117,70 +95,130 @@ class MainActivity : Activity() {
                     salvaDatiLocali(dati)
                     caricaDatiLocali()
                 } else {
-                    tvStato.text = "✖ Errore di download. Controlla la connessione."
-                    tvStato.setTextColor(clrRosso)
+                    tvStatusTop.text = "✖ Errore di download. Controlla la connessione."
+                    tvStatusTop.setTextColor(clrRosso)
                 }
-                btnAggiorna.text = "⬇ Aggiorna Internet"
+                btnAggiorna.text = "⬇ Aggiorna"
                 btnAggiorna.isEnabled = true
             }
         }
 
-        btnReport.setOnClickListener {
-            val reportTxt = "REPORT QUATERNA ULTRA\n\n" +
-                    "Data 5° Estrazione: ${tvInfo.text}\n" +
-                    "Quaterna: ${tvQuaterna.text}\n\n" +
-                    "Esiti:\n${if (tvEsiti.text.isEmpty()) "Nessun esito registrato." else tvEsiti.text}"
-            AlertDialog.Builder(this).setTitle("Report").setMessage(reportTxt).setPositiveButton("OK", null).show()
+        // Azioni per gli altri pulsanti (per ora mostrano un avviso)
+        btnManuale.setOnClickListener { mostraAvviso("Archivio Manuale", "Funzione in fase di sviluppo.") }
+        btnArchivio.setOnClickListener { mostraAvviso("Archivio", "Visualizzazione estrazioni in sviluppo.") }
+        btnPrev.setOnClickListener { 
+            if (llStorico.childCount > 0) {
+                mostraAvviso("Previsione Attiva", "La previsione più recente è la prima card in alto.")
+            } else {
+                mostraAvviso("Previsione", "Nessun dato caricato.")
+            }
         }
+        btnReport.setOnClickListener { mostraAvviso("Report", "Generazione PDF/TXT in fase di sviluppo.") }
 
         setContentView(scroll)
+    }
+
+    private fun creaPulsante(testo: String, colore: Int): Button {
+        val b = Button(this)
+        b.text = testo
+        b.setTextColor(Color.WHITE)
+        b.textSize = 12f
+        b.setBackgroundColor(clrGrigioScuro)
+        
+        // Bordo colorato
+        val shape = GradientDrawable().apply {
+            setColor(clrGrigioScuro)
+            cornerRadius = 15f
+            setStroke(2, colore)
+        }
+        b.background = shape
+        
+        val params = LinearLayout.LayoutParams(0, 110, 1f)
+        params.setMargins(5, 0, 5, 0)
+        b.layoutParams = params
+        return b
     }
 
     private fun caricaDatiLocali() {
         val file = File(filesDir, "storico.txt")
         if (!file.exists()) {
-            tvStato.text = "Archivio non trovato. Clicca 'Aggiorna'."
+            tvStatusTop.text = "Nessun dato. Clicca 'Aggiorna'."
             return
         }
         val testo = file.readText()
         val archivio = LottoEngine.parseStorico(testo)
+        val ultimaData = archivio.lastOrNull()?.data ?: "Sconosciuta"
         
-        val ultimaQuinta = LottoEngine.trovaUltimaQuintaEstrazione(archivio)
-        if (ultimaQuinta != null) {
-            val dataTarget = ultimaQuinta.first
-            val prev = LottoEngine.calcolaPrevisione(dataTarget, archivio)
-            
-            if (prev != null) {
-                LottoEngine.verificaEsiti(prev, archivio)
-                
-                tvInfo.text = "5° Estr. del mese: $dataTarget (Fig. ${prev.figura})"
-                tvQuaterna.text = String.format("%02d - %02d - %02d - %02d", prev.q[0], prev.q[1], prev.q[2], prev.q[3])
-                
-                if (prev.stato == "VINCENTE") {
-                    tvStato.text = "✔ VINCENTE al ${prev.colpoMinimo}° colpo!"
-                    tvStato.setTextColor(clrVerde)
-                } else if (prev.stato == "IN GIOCO") {
-                    tvStato.text = "⏳ In gioco... Colpo ${prev.colpiGiocati + 1} di 13"
-                    tvStato.setTextColor(clrAzzurro)
-                } else {
-                    tvStato.text = "✖ SCADUTA (13 colpi esauriti)"
-                    tvStato.setTextColor(clrRosso)
-                }
+        tvStatusTop.text = "Aggiornato! ${archivio.size} righe • Ultima estrazione: $ultimaData"
+        tvStatusTop.setTextColor(Color.WHITE)
 
-                if (prev.esitiDettaglio.isNotEmpty()) {
-                    tvEsiti.text = "ESITI IN DETTAGLIO:\n" + prev.esitiDettaglio.joinToString("\n")
-                    tvEsiti.setTextColor(clrVerde)
+        val storico = LottoEngine.calcolaTuttoLoStorico(archivio)
+        llStorico.removeAllViews()
+
+        for (prev in storico) {
+            val card = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(30, 30, 30, 30)
+                val shape = GradientDrawable().apply {
+                    setColor(clrPannello)
+                    cornerRadius = 15f
+                    setStroke(1, Color.parseColor("#333344"))
+                }
+                background = shape
+                val p = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                p.setMargins(0, 0, 0, 20)
+                layoutParams = p
+            }
+
+            // Riga 1 della Card (Mese e Data)
+            val r1 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            val tvMese = TextView(this).apply {
+                text = prev.meseAnno
+                textSize = 18f; setTextColor(clrOro); setTypeface(null, Typeface.BOLD)
+            }
+            val tvData = TextView(this).apply {
+                text = "5° Estr: ${prev.dataTarget}"
+                textSize = 14f; setTextColor(clrTesto)
+                gravity = Gravity.END
+            }
+            val lpData = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            tvData.layoutParams = lpData
+            r1.addView(tvMese); r1.addView(tvData)
+
+            // Riga 2 (Quaterna calcolata)
+            val tvQuaterna = TextView(this).apply {
+                text = "Quaterna: " + prev.q.joinToString(" - ") { String.format("%02d", it) }
+                textSize = 16f; setTextColor(Color.WHITE); setTypeface(null, Typeface.BOLD)
+                setPadding(0, 10, 0, 10)
+            }
+
+            // Riga 3 (Esiti)
+            val tvEsiti = TextView(this).apply {
+                textSize = 14f
+                if (prev.stato == "VINCENTE") {
+                    text = "✔ " + prev.esitiDettaglio.joinToString("\n✔ ")
+                    setTextColor(clrVerde)
+                } else if (prev.stato == "IN GIOCO") {
+                    text = "⏳ In gioco: colpo ${prev.colpiGiocati + 1}/13"
+                    setTextColor(clrAzzurro)
                 } else {
-                    tvEsiti.text = "Nessun esito registrato finora."
-                    tvEsiti.setTextColor(clrTesto)
+                    text = "✖ Negativo (13 colpi esauriti)"
+                    setTextColor(clrRosso)
                 }
             }
-        } else {
-            tvStato.text = "In attesa dei dati per la 5° estrazione..."
+
+            card.addView(r1)
+            card.addView(tvQuaterna)
+            card.addView(tvEsiti)
+            llStorico.addView(card)
         }
     }
 
     private fun salvaDatiLocali(testo: String) {
         try { File(filesDir, "storico.txt").writeText(testo) } catch (e: Exception) { e.printStackTrace() }
+    }
+
+    private fun mostraAvviso(titolo: String, messaggio: String) {
+        AlertDialog.Builder(this).setTitle(titolo).setMessage(messaggio).setPositiveButton("OK", null).show()
     }
 }
