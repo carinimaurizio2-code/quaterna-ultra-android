@@ -1,11 +1,13 @@
-
 package com.mauriziocarini.quaterna
 
 import android.app.Activity
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.LinearLayout
 import android.widget.ListView
@@ -54,14 +56,14 @@ class ArchivioActivity : Activity() {
             val righe = withContext(Dispatchers.Default) {
                 val testo = file.readText()
                 val archivio = LottoEngine.parseStorico(testo)
-                // Prendiamo gli ultimi 100 per non intasare la memoria (o tutti se preferisci)
+                // Prendiamo gli ultimi 200 per non intasare la memoria
                 archivio.takeLast(200).reversed().map { est ->
                     "${est.data.replace("/", "-")}  |  ${est.ruota}  |  ${est.n1} - ${est.n2} - ${est.n3} - ${est.n4} - ${est.n5}"
                 }
             }
 
             val adapter = object : ArrayAdapter<String>(this@ArchivioActivity, android.R.layout.simple_list_item_1, righe) {
-                override fun getView(position: Int, convertView: android.view.View?, parent: android.view.ViewGroup): android.view.View {
+                override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                     val view = super.getView(position, convertView, parent) as TextView
                     view.setTextColor(Color.WHITE)
                     view.textSize = 14f
