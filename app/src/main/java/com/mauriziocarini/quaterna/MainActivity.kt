@@ -11,7 +11,6 @@ import android.text.InputType
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.*
-import androidx.core.content.FileProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,6 +35,7 @@ class MainActivity : Activity() {
     private lateinit var llStorico: LinearLayout
     private lateinit var btnAggiorna: Button
     
+    // Salviamo i dati calcolati qui per usarli nel report
     private var storicoCalcolato: List<LottoEngine.Previsione> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,7 +49,7 @@ class MainActivity : Activity() {
         layout.setPadding(30, 40, 30, 40)
         scroll.addView(layout)
 
-        // TITOLO
+        // 1. TITOLO IN ALTO
         val tvTitoloApp = TextView(this).apply {
             text = "🎯 QUATERNA ULTRA"
             textSize = 28f
@@ -69,6 +69,7 @@ class MainActivity : Activity() {
         }
         layout.addView(tvStatusTop)
 
+        // PULSANTI RIGA 1
         val row1 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         btnAggiorna = creaPulsante("⬇ Aggiorna", clrAzzurro)
         val btnManuale = creaPulsante("✏ Incolla", clrVerde)
@@ -78,6 +79,7 @@ class MainActivity : Activity() {
         row1.addView(btnPrev)
         layout.addView(row1)
 
+        // PULSANTI RIGA 2
         val row2 = LinearLayout(this).apply { 
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, 10, 0, 30)
@@ -100,6 +102,8 @@ class MainActivity : Activity() {
         llStorico = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         layout.addView(llStorico)
 
+        // --- AZIONI DEI PULSANTI ---
+        
         caricaDatiLocali()
 
         btnAggiorna.setOnClickListener {
@@ -123,11 +127,16 @@ class MainActivity : Activity() {
         }
 
         btnManuale.setOnClickListener { mostraDialogoIncolla() }
-        btnArchivio.setOnClickListener { mostraAvviso("Archivio", "Visualizzazione estrazioni in sviluppo.") }
+        
+        btnArchivio.setOnClickListener { 
+            startActivity(Intent(this, ArchivioActivity::class.java)) 
+        }
+        
         btnPrev.setOnClickListener { 
             if (llStorico.childCount > 0) mostraAvviso("Previsione Attiva", "La previsione più recente è la prima card in alto.")
             else mostraAvviso("Previsione", "Nessun dato caricato.")
         }
+        
         btnReport.setOnClickListener { generaEReport() }
 
         setContentView(scroll)
@@ -280,22 +289,10 @@ class MainActivity : Activity() {
             sb.append("-----------------------------------------\n")
         }
 
-        try {
-            val reportFile = File(cacheDir, "Report_QuaternaUltra.txt")
-            reportFile.writeText(sb.toString())
-
-            val uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", reportFile)
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_SUBJECT, "Report Quaterna Ultra")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            startActivity(Intent.createChooser(intent, "Condividi Report con..."))
-            
-        } catch (e: Exception) {
-            mostraAvviso("Errore", "Impossibile generare il file: ${e.message}")
-        }
+        // Apre la nuova schermata del Report passando il testo
+        val intent = Intent(this, ReportActivity::class.java)
+        intent.putExtra("REPORT_TESTO", sb.toString())
+        startActivity(intent)
     }
 
     private fun mostraDialogoIncolla() {
