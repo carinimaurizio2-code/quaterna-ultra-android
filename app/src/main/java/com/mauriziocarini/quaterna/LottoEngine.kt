@@ -8,6 +8,7 @@ object LottoEngine {
 
     data class Previsione(
         var dataTarget: String = "",
+        var meseAnno: String = "",
         var figura: Int = 0,
         var numBase: Int = 0,
         var q: IntArray = intArrayOf(0, 0, 0, 0),
@@ -55,18 +56,33 @@ object LottoEngine {
         }
     }
 
-    fun trovaUltimaQuintaEstrazione(archivio: List<Estrazione>): Pair<String, String>? {
-        val dateRoma = archivio.filter { it.ruota == "RM" }.map { it.data }.distinct().sortedDescending()
-        if (dateRoma.isEmpty()) return null
-        val mesi = dateRoma.map { it.substring(0, 7) }.distinct()
+    // Calcola l'intero storico per la Dashboard
+    fun calcolaTuttoLoStorico(archivio: List<Estrazione>): List<Previsione> {
+        val risultati = mutableListOf<Previsione>()
+        val dateRoma = archivio.filter { it.ruota == "RM" }.map { it.data }.distinct().sorted()
+        val mesi = dateRoma.map { it.substring(0, 7) }.distinct() // es. "2025/10"
+
         for (mese in mesi) {
             val dateMese = dateRoma.filter { it.startsWith(mese) }.sorted()
-            if (dateMese.size >= 5) return Pair(dateMese[4], mese)
+            if (dateMese.size >= 5) {
+                val dataTarget = dateMese[4] // 5° estrazione del mese
+                val prev = calcolaPrevisione(dataTarget, archivio)
+                if (prev != null) {
+                    // Formatta il mese per la grafica (es. "OTT-25")
+                    val anno = mese.substring(2, 4)
+                    val meseNum = mese.substring(5, 7).toInt()
+                    val nomiMesi = arrayOf("GEN", "FEB", "MAR", "APR", "MAG", "GIU", "LUG", "AGO", "SET", "OTT", "NOV", "DIC")
+                    prev.meseAnno = "${nomiMesi[meseNum - 1]}-$anno"
+                    
+                    verificaEsiti(prev, archivio)
+                    risultati.add(prev)
+                }
+            }
         }
-        return null
+        return risultati.sortedByDescending { it.dataTarget } // I più recenti in alto
     }
 
-    fun calcolaPrevisione(dataTarget: String, archivio: List<Estrazione>): Previsione? {
+    private fun calcolaPrevisione(dataTarget: String, archivio: List<Estrazione>): Previsione? {
         val eRM = archivio.firstOrNull { it.data == dataTarget && it.ruota == "RM" } ?: return null
         val eCA = archivio.firstOrNull { it.data == dataTarget && it.ruota == "CA" }
         val fig = calcolaFigura(eRM.n1)
@@ -94,8 +110,9 @@ object LottoEngine {
         return res
     }
 
-    fun verificaEsiti(res: Previsione, archivio: List<Estrazione>) {
+    private fun verificaEsiti(res: Previsione, archivio: List<Estrazione>) {
         val dateSuccessive = archivio.filter { it.data > res.dataTarget }.map { it.data }.distinct().sorted().take(13)
+        
         for ((index, data) in dateSuccessive.withIndex()) {
             val colpo = index + 1
             val estrazioniGiorno = archivio.filter { it.data == data }
@@ -104,15 +121,16 @@ object LottoEngine {
                 val hit = estr.numeri().count { num -> res.q.contains(num) }
                 if (hit >= 2) {
                     val numeriColpiti = res.q.filter { estr.numeri().contains(it) }.joinToString("-") { String.format("%02d", it) }
-                    val sorte = if (hit == 4) "Quaterna secca" else if (hit == 3) "Terno" else "Ambo"
+                    val sorte = if (hit == 4) "Quaterna" else if (hit == 3) "Terno" else "Ambo"
                     
                     var ruotaTxt = ""
                     if (estr.ruota == "RM") ruotaTxt = "ROMA"
                     else if (estr.ruota == "RN") ruotaTxt = "NAZIONALE"
-                    else if (hit >= 3) ruotaTxt = "TUTTE (${estr.ruota})"
-                    else continue
+                    else if (hit >= 3) ruotaTxt = "TUTTE"
+                    else continue 
 
-                    res.esitiDettaglio.add("✔ $sorte ($numeriColpiti) su $ruotaTxt al $colpo° colpo")
+                    // Aggiungiamo l'esito formattato
+                    res.esitiDettaglio.add("$sorte: $numeriColpiti ($ruotaTxt)")
                     if (res.stato != "VINCENTE") {
                         res.stato = "VINCENTE"
                         res.colpoMinimo = colpo
@@ -120,8 +138,9 @@ object LottoEngine {
                 }
             }
             res.colpiGiocati = colpo
-            if (res.stato == "VINCENTE") break
+            if (res.stato == "VINCENTE") break 
         }
+        
         if (res.stato != "VINCENTE") {
             if (res.colpiGiocati >= 13) res.stato = "NEGATIVO"
             else res.stato = "IN GIOCO"
