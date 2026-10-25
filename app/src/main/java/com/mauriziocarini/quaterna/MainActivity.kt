@@ -125,16 +125,11 @@ class MainActivity : Activity() {
         }
 
         btnManuale.setOnClickListener { mostraDialogoIncolla() }
-        
-        btnArchivio.setOnClickListener { 
-            startActivity(Intent(this, ArchivioActivity::class.java)) 
-        }
-        
+        btnArchivio.setOnClickListener { startActivity(Intent(this, ArchivioActivity::class.java)) }
         btnPrev.setOnClickListener { 
             if (llStorico.childCount > 0) mostraAvviso("Previsione Attiva", "La previsione più recente è la prima card in alto.")
             else mostraAvviso("Previsione", "Nessun dato caricato.")
         }
-        
         btnReport.setOnClickListener { generaEReport() }
 
         setContentView(scroll)
@@ -267,6 +262,45 @@ class MainActivity : Activity() {
         sb.append("       REPORT - QUATERNA ULTRA\n")
         sb.append("=========================================\n")
         sb.append("Generato il: $dateStr\n\n")
+        
+        // --- AGGIUNTA ITER OPERATIVO ---
+        sb.append("--- ITER OPERATIVO DEL METODO ---\n")
+        sb.append("Procedimento analizzato: ricava 1 QUATERNA per le sorti di ambo, terno e quaterna, da porre in gioco su 1 ruota per 13 estrazioni.\n")
+        sb.append("Il pronostico si applica alla 5° estrazione del mese. Se in una formazione ci sono 2 numeri uguali, si gioca il +1 del numero stesso (es. 23-23-45 -> 23-24-45).\n")
+        sb.append("Si applica la regola del FUORI 90 quando una somma supera 90 (es. 120-90 = 30).\n")
+        sb.append("Il metodo fa riferimento alle FIGURE (numeri a distanza di 9 unità): si sommano le due cifre del numero e, se la somma supera 9, si sottrae 9 (es. 48 = 4+8 = 12-9 = 3 -> figura 3).\n\n")
+        
+        sb.append("Base di calcolo: 1° estratto della ruota di ROMA alla 5° estrazione del mese (figura).\n\n")
+        
+        sb.append("FIGURA 8, 9 (del 1° estratto di ROMA):\n")
+        sb.append("  1° numero -> 4° estratto ROMA + 90\n")
+        sb.append("  2° numero -> 5° estratto ROMA + 48\n")
+        sb.append("  3° numero -> 5° estratto ROMA + 20\n")
+        sb.append("  4° numero -> 4° estratto CAGLIARI + 69\n\n")
+        
+        sb.append("FIGURA 2, 7 (del 1° estratto di ROMA):\n")
+        sb.append("  1° numero -> 3° estratto ROMA + 4\n")
+        sb.append("  2° numero -> 4° estratto ROMA + 79\n")
+        sb.append("  3° numero -> 5° estratto ROMA + 32\n")
+        sb.append("  4° numero -> 4° estratto CAGLIARI + 36\n\n")
+        
+        sb.append("FIGURA 1, 4, 5 (del 1° estratto di ROMA):\n")
+        sb.append("  1° numero -> 2° estratto ROMA + 14\n")
+        sb.append("  2° numero -> 3° estratto ROMA + 5\n")
+        sb.append("  3° numero -> 3° estratto ROMA + 29\n")
+        sb.append("  4° numero -> 1° estratto CAGLIARI + 44\n\n")
+        
+        sb.append("FIGURA 3, 6 (del 1° estratto di ROMA):\n")
+        sb.append("  1° numero -> 1° estratto ROMA + 6\n")
+        sb.append("  2° numero -> 4° estratto ROMA + 13\n")
+        sb.append("  3° numero -> 1° estratto ROMA + 9\n")
+        sb.append("  4° numero -> 1° estratto ROMA + 45\n\n")
+        
+        sb.append("Ruota di gioco: ROMA per 13 estrazioni (ambo, terno, quaterna).\n")
+        sb.append("Recupero suggerito: quaterna per ambo-terno-quaterna sulla NAZIONALE e per terno-quaterna su TUTTE.\n")
+        sb.append("=========================================\n\n")
+
+        // --- STORICO ESITI ---
         sb.append("--- STORICO PREVISIONI ED ESITI ---\n\n")
         
         for (prev in storicoCalcolato) {
