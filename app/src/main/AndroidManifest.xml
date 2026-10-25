@@ -18,7 +18,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Aggiunte le nuove schermate -->
+        <!-- Registrazione delle nuove schermate -->
         <activity android:name=".ArchivioActivity" android:label="Archivio" />
         <activity android:name=".ReportActivity" android:label="Report" />
     </application>
