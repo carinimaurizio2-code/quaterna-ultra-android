@@ -35,7 +35,6 @@ class MainActivity : Activity() {
     private lateinit var llStorico: LinearLayout
     private lateinit var btnAggiorna: Button
     
-    // Salviamo i dati calcolati qui per usarli nel report
     private var storicoCalcolato: List<LottoEngine.Previsione> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,7 +48,7 @@ class MainActivity : Activity() {
         layout.setPadding(30, 40, 30, 40)
         scroll.addView(layout)
 
-        // 1. TITOLO IN ALTO
+        // TITOLO IN ALTO
         val tvTitoloApp = TextView(this).apply {
             text = "🎯 QUATERNA ULTRA"
             textSize = 28f
@@ -102,8 +101,7 @@ class MainActivity : Activity() {
         llStorico = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         layout.addView(llStorico)
 
-        // --- AZIONI DEI PULSANTI ---
-        
+        // AZIONI
         caricaDatiLocali()
 
         btnAggiorna.setOnClickListener {
@@ -289,7 +287,6 @@ class MainActivity : Activity() {
             sb.append("-----------------------------------------\n")
         }
 
-        // Apre la nuova schermata del Report passando il testo
         val intent = Intent(this, ReportActivity::class.java)
         intent.putExtra("REPORT_TESTO", sb.toString())
         startActivity(intent)
