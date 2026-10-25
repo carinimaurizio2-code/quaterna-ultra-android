@@ -1,4 +1,3 @@
-
 package com.mauriziocarini.quaterna
 
 object LottoEngine {
@@ -61,8 +60,8 @@ object LottoEngine {
         val risultati = mutableListOf<Previsione>()
         val dateRoma = archivio.filter { it.ruota == "RM" }.map { it.data }.distinct().sorted()
         
-        // FILTRO: Partiamo da Ottobre 2025 ("2025/10")
-        val mesi = dateRoma.map { it.substring(0, 7) }.distinct().filter { it >= "2025/10" }
+        // FILTRO: Partiamo dal 1939 (o rimuovilo del tutto se vuoi)
+        val mesi = dateRoma.map { it.substring(0, 7) }.distinct().filter { it >= "1939/01" }
         
         val archivioPerData = archivio.groupBy { it.data }
         val tutteLeDateOrdinate = archivio.map { it.data }.distinct().sorted()
