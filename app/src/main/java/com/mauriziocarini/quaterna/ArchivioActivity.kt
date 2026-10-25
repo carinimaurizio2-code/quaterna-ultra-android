@@ -29,7 +29,7 @@ class ArchivioActivity : Activity() {
         }
 
         val tvTitolo = TextView(this).apply {
-            text = "📋 ARCHIVIO ESTRAZIONI"
+            text = "📋 ARCHIVIO COMPLETO"
             textSize = 22f
             setTextColor(Color.parseColor("#D4AF5A"))
             setTypeface(null, Typeface.BOLD)
@@ -45,7 +45,6 @@ class ArchivioActivity : Activity() {
         layout.addView(listView)
         setContentView(layout)
 
-        // Carica i dati in background per non bloccare l'app
         val file = File(filesDir, "storico.txt")
         if (!file.exists()) {
             tvTitolo.text = "Nessun dato in archivio."
@@ -56,8 +55,9 @@ class ArchivioActivity : Activity() {
             val righe = withContext(Dispatchers.Default) {
                 val testo = file.readText()
                 val archivio = LottoEngine.parseStorico(testo)
-                // Prendiamo gli ultimi 200 per non intasare la memoria
-                archivio.takeLast(200).reversed().map { est ->
+                
+                // RIMOSSO IL LIMITE: Ora prende tutto l'archivio e lo inverte (dal più recente)
+                archivio.reversed().map { est ->
                     "${est.data.replace("/", "-")}  |  ${est.ruota}  |  ${est.n1} - ${est.n2} - ${est.n3} - ${est.n4} - ${est.n5}"
                 }
             }
